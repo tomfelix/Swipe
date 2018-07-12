@@ -11,6 +11,11 @@ const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
 const SWIPE_OUT_DURATION = 250;
 
 class Deck extends React.Component {
+static defaultProps = {
+  onSwipeRight: () => {},
+  onSwipeLeft: () => {}
+}
+
   constructor (props) {
     super(props);
 
@@ -22,30 +27,33 @@ class Deck extends React.Component {
       },
       onPanResponderRelease: (event, gesture) => {
         if (gesture.dx > SWIPE_THRESHOLD) {
-          this.forceSwipeRight();
+          this.forceSwipe('right');
         } else if (gesture.dx < -SWIPE_THRESHOLD) {
-          this.forceSwipeLeft();
+          this.forceSwipe('left');
         } else {
           this.resetPosition();
         }
       }
     });
 
-    this.state = { panResponder, position };
+    this.state = { panResponder, position, index: 0 };
   }
 
-  forceSwipeRight () {
+  forceSwipe (direction) {
+    const x = direction === 'right' ? 1.5 * SCREEN_WIDTH : -1.5 * SCREEN_WIDTH;
     Animated.timing(this.state.position, {
-      toValue: { x: 2 * SCREEN_WIDTH, y: 0 },
+      toValue: { x, y: 0 },
       duration: SWIPE_OUT_DURATION
-    }).start();
+    }).start(() => this.onSwipeComplete(direction));
   }
 
-  forceSwipeLeft () {
-    Animated.timing(this.state.position, {
-      toValue: { x: -2 * SCREEN_WIDTH, y: 0 },
-      duration: SWIPE_OUT_DURATION
-    }).start();
+  onSwipeComplete (direction) {
+    const { onSwipeLeft, onSwipeRight, data } = this.props;
+    const item = data[this.state.index]
+
+    direction === 'right' ? onSwipeRight(item) : onSwipeLeft(item);
+    this.setState({ index: this.state.index + 1 });
+    this.state.position.setValue({ x: 0, y: 0 });
   }
 
   resetPosition () {
@@ -67,8 +75,10 @@ class Deck extends React.Component {
   }
 
   renderCards () {
-    return this.props.data.map((item, index) => {
-      if (index === 0) {
+    return this.props.data.map((item, i) => {
+      if (i < this.state.index) { return null; }
+
+      if (i === this.state.index) {
         return (
           <Animated.View
             key={item.id}
