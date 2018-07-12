@@ -3,7 +3,9 @@ import {
   View,
   Animated,
   PanResponder,
-  Dimensions
+  Dimensions,
+  LayoutAnimation,
+  UIManager
 } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -37,6 +39,17 @@ static defaultProps = {
     });
 
     this.state = { panResponder, position, index: 0 };
+  }
+
+  componentWillUpdate () {
+    UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
+    LayoutAnimation.spring();
+  }
+
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.data !== this.props.data) {
+      this.setState({ index: 0 })
+    }
   }
 
   forceSwipe (direction) {
@@ -95,7 +108,7 @@ static defaultProps = {
       return (
         <Animated.View
           key={item.id}
-          style={styles.cardStyle}
+          style={[styles.cardStyle, { top: 10 * (i - this.state.index) }]}
           >
           {this.props.renderCard(item)}
         </Animated.View>
