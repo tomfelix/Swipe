@@ -93,12 +93,12 @@ static defaultProps = {
         )
       }
       return (
-        <View
+        <Animated.View
           key={item.id}
           style={styles.cardStyle}
           >
           {this.props.renderCard(item)}
-        </View>
+        </Animated.View>
       );
     }).reverse();
   }
